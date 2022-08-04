@@ -1,15 +1,26 @@
-$start_create = $false
-foreach ($l in Get-Content .\input01.sql) {
-  if ( $l -match '^\)' -And $start_create ) {
-    $start_create = $false
-    break;
+function GetTableNameAndColumnNames($file) {
+  $start_create = $false
+  $cols = New-Object System.Collections.ArrayList
+  foreach ($l in Get-Content $file) {
+    if ( $l -match '^\)' -And $start_create ) {
+      $start_create = $false
+      break;
+    }
+    if ( $start_create ) {
+      $c = $l.Trim().Split(" ")[0]
+      [void] $cols.Add($c)
+    }
+    if ( $l -match 'CREATE TABLE (.*) \(' ) {
+      $t = $Matches[1]
+      $start_create = $true
+    }
   }
-  if ( $start_create ) {
-    Write-Host $l
-  }
-  if ( $l -match 'CREATE TABLE (.*) \(' ) {
-    Write-Host "table name $($Matches[1])"
-    $start_create = $true
-  }
+  return $t, $cols
 }
+
+$data = GetTableNameAndColumnNames(".\input01.sql")
+
+Write-Host $data.length
+Write-Host $data[0] # tablename
+Write-Host $data[1] # columns
 
